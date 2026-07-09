@@ -5,10 +5,14 @@ const ROOT = path.resolve(__dirname, "..");
 const OUTPUT = path.join(ROOT, "outputs", "growth_indices_dashboard.html");
 const ROOT_INDEX = path.join(ROOT, "index.html");
 const START = "2010-06-01";
-const END = "2026-07-02";
+const END = "2026-07-09";
 
 function readMarketOverview() {
   return JSON.parse(fs.readFileSync(path.join(ROOT, "work", "market_overview_data.json"), "utf8"));
+}
+
+function readIndexProfit() {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, "work", "index_profit_data.json"), "utf8"));
 }
 
 function lastByWeek(rows) {
@@ -25,6 +29,27 @@ function lastByWeek(rows) {
     } else {
       result[result.length - 1] = row;
     }
+  }
+  return result;
+}
+
+function attachProfit(rows, profitRows) {
+  const result = [];
+  let profitIndex = -1;
+  for (const row of rows) {
+    while (
+      profitIndex + 1 < profitRows.length &&
+      profitRows[profitIndex + 1].date <= row.date
+    ) {
+      profitIndex += 1;
+    }
+    const profit = profitIndex >= 0 ? profitRows[profitIndex] : null;
+    result.push({
+      ...row,
+      profitYi: profit?.profitYi ?? null,
+      profitPeriod: profit?.date ?? null,
+      profitCoverage: profit?.coverage ?? null,
+    });
   }
   return result;
 }
@@ -160,8 +185,8 @@ function htmlTemplate(data, echartsSource) {
     <div id="chart"></div>
   </section>
   <section class="notes">
-    <div class="note"><strong>利润口径：</strong>滚动盈利点数 = 指数点位 ÷ PE(TTM)。创业板指可用该口径观察价格、盈利与估值的贡献；科创综指当前 Tushare 暂无 PE/PB 序列，页面保留价格展示，估值相关位置显示暂无数据。</div>
-    <div class="note"><strong>阅读方法：</strong>价格上涨若主要由盈利曲线上升推动，质量更扎实；若价格快速上涨、盈利横盘而PE显著抬升，则主要是估值扩张。虚线标记历史典型顶部窗口，仅用于辅助复盘。</div>
+    <div class="note"><strong>利润口径：</strong>真实利润为指数成分股归母净利润 TTM 汇总，单位为亿元；按 Tushare 指数权重表识别当期成分，再汇总这些成分股最近四个季度的归母净利润。</div>
+    <div class="note"><strong>阅读方法：</strong>价格上涨若主要由真实利润上升推动，质量更扎实；若价格快速上涨、利润横盘而PE显著抬升，则主要是估值扩张。虚线标记历史典型顶部窗口，仅用于辅助复盘。</div>
   </section>
 </main>
 <script>${echartsSource}</script>
@@ -173,10 +198,10 @@ const signed = (n) => Number.isFinite(Number(n)) ? (n >= 0 ? "+" : "") + fmt(n, 
 const cards = [
   ["创业板指", fmt(DATA.stats.sh.close), "近1年 " + signed(DATA.stats.sh.yearChange), "sh"],
   ["创业板PE(TTM)", fmt(DATA.stats.sh.pe), "样本分位 " + fmt(DATA.stats.sh.pePercentile, 0) + "%", "sh"],
-  ["创业板滚动盈利", fmt(DATA.stats.sh.earnings), "指数盈利点数", "sh"],
+  ["创业板真实利润", fmt(DATA.stats.sh.profitYi), "归母净利润TTM，亿元", "sh"],
   ["科创综指", fmt(DATA.stats.sz.close), "近1年 " + signed(DATA.stats.sz.yearChange), "sz"],
   ["科创综指PE(TTM)", fmt(DATA.stats.sz.pe), "Tushare暂无序列", "sz"],
-  ["科创综指滚动盈利", fmt(DATA.stats.sz.earnings), "等待PE口径补齐", "sz"],
+  ["科创综指真实利润", fmt(DATA.stats.sz.profitYi), "归母净利润TTM，亿元", "sz"],
 ];
 document.getElementById("cards").innerHTML = cards.map(([label, value, meta, cls]) =>
   '<article class="card"><div class="label">' + label + '</div><div class="value ' + cls + '">' + value +
@@ -221,7 +246,7 @@ chart.setOption({
   ],
   title: [
     { text: "指数价格", left: 20, top: 12, textStyle: { color: "#edf4ff", fontSize: 13 } },
-    { text: "过去12个月滚动盈利（指数点）", left: 20, top: "34%", textStyle: { color: "#edf4ff", fontSize: 13 } },
+    { text: "归母净利润TTM（亿元）", left: 20, top: "34%", textStyle: { color: "#edf4ff", fontSize: 13 } },
     { text: "市盈率 PE(TTM)", left: 20, top: "64%", textStyle: { color: "#edf4ff", fontSize: 13 } }
   ],
   tooltip: {
@@ -253,8 +278,8 @@ chart.setOption({
   series: [
     series("创业板价格", DATA.sh, "close", 0, 0, COLORS.sh, true),
     series("科创综指价格", DATA.sz, "close", 0, 0, COLORS.sz),
-    series("创业板滚动盈利", DATA.sh, "earnings", 1, 1, COLORS.sh),
-    series("科创综指滚动盈利", DATA.sz, "earnings", 1, 1, COLORS.sz),
+    series("创业板真实利润", DATA.sh, "profitYi", 1, 1, COLORS.sh),
+    series("科创综指真实利润", DATA.sz, "profitYi", 1, 1, COLORS.sz),
     series("创业板PE(TTM)", DATA.sh, "pe", 2, 2, COLORS.sh),
     series("科创综指PE(TTM)", DATA.sz, "pe", 2, 2, COLORS.sz)
   ]
@@ -293,6 +318,9 @@ async function main() {
     execFileSync(python, [path.join(ROOT, "work", "fetch_market_overview_data.py")], {
       stdio: "inherit",
     });
+    execFileSync(python, [path.join(ROOT, "work", "fetch_index_profit_data.py")], {
+      stdio: "inherit",
+    });
     execFileSync(python, [path.join(ROOT, "work", "fetch_valuation_data.py")], {
       stdio: "inherit",
     });
@@ -301,8 +329,9 @@ async function main() {
     console.warn("Valuation refresh failed; using the existing valuation_data.json cache.");
   }
   const overview = readMarketOverview();
-  const sh = lastByWeek(overview.sh);
-  const sz = lastByWeek(overview.sz);
+  const profit = readIndexProfit();
+  const sh = lastByWeek(attachProfit(overview.sh, profit.sh));
+  const sz = lastByWeek(attachProfit(overview.sz, profit.sz));
   const echartsSource = fs.readFileSync(path.join(ROOT, "work", "echarts.min.js"), "utf8");
   const data = { sh, sz, stats: { sh: stats(sh), sz: stats(sz) } };
   fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });

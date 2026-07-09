@@ -228,7 +228,7 @@ const js = `
     const valuationData = { sh: DATA.sh, sz: DATA.sz };
     const curatedEvents = {
       "2007-Q3": [
-        { type: "估值升温", title: "指数估值进入历史极高区间", desc: "股价上涨明显快于盈利点数增长，估值扩张成为行情主要推动力。", meta: "观察项：PE分位、IPO热度" }
+        { type: "估值升温", title: "指数估值进入历史极高区间", desc: "股价上涨明显快于真实利润增长，估值扩张成为行情主要推动力。", meta: "观察项：PE分位、IPO热度" }
       ],
       "2007-Q4": [
         { type: "IPO定价过热", title: "大型热门公司上市强化高估值叙事", desc: "稀缺性、成长空间和指数权重被集中定价，顶部阶段的乐观预期进一步强化。", meta: "典型窗口：2007年10月至11月" }

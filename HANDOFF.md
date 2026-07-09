@@ -57,7 +57,7 @@ Tushare 当前可以返回：
 - 创业板指 `399006.SZ`：价格、PE(TTM)、PB
 - 科创综指 `000680.SH`：价格
 
-Tushare 当前没有返回科创综指 `index_dailybasic` 的 PE/PB 序列，所以科创综指的 PE、PB、滚动盈利、股债收益差在页面内显示为暂无数据。
+Tushare 当前没有返回科创综指 `index_dailybasic` 的 PE/PB 序列，所以科创综指的 PE、PB、股债收益差在页面内显示为暂无数据。真实利润使用 `index_weight` 成分股与 `income` 归母净利润 TTM 汇总，可以正常展示。
 
 ## 同步与部署
 
