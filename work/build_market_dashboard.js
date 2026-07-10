@@ -321,6 +321,9 @@ async function main() {
     execFileSync(python, [path.join(ROOT, "work", "fetch_index_profit_data.py")], {
       stdio: "inherit",
     });
+    execFileSync(python, [path.join(ROOT, "work", "fetch_official_sentiment_data.py")], {
+      stdio: "inherit",
+    });
     execFileSync(python, [path.join(ROOT, "work", "fetch_valuation_data.py")], {
       stdio: "inherit",
     });
@@ -339,6 +342,7 @@ async function main() {
   require("./add_valuation_module");
   require("./add_retail_sentiment_module");
   require("./add_large_money_sentiment_module");
+  require("./add_official_sentiment_module");
   fs.copyFileSync(OUTPUT, ROOT_INDEX);
   console.log(JSON.stringify({
     output: OUTPUT,

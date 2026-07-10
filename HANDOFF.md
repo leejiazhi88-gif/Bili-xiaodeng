@@ -59,6 +59,26 @@ Tushare 当前可以返回：
 
 Tushare 当前没有返回科创综指 `index_dailybasic` 的 PE/PB 序列，所以科创综指的 PE、PB、股债收益差在页面内显示为暂无数据。真实利润使用 `index_weight` 成分股与 `income` 归母净利润 TTM 汇总，可以正常展示。
 
+新增的 `情绪-官方` 模块包含：
+
+- IPO融资额：Tushare `new_share` 月度汇总
+- 产业资本净减持额：Tushare `stk_holdertrade` 重要股东增减持公告估算，正值为净减持
+- 印花税率：手工政策表
+- 政策利率：Tushare `shibor_lpr`，当前展示 1年期 LPR
+- 社融增量 / M2增速：Tushare `sf_month` / `cn_m`
+- 官方情绪事件 List：维护在 `work/official_sentiment_events.json`
+
+再融资额与国家队持仓规模当前只保留指标入口：再融资额暂缺稳定可自动更新的全市场金额接口，国家队持仓规模没有统一官方连续披露口径。
+
+相关文件：
+
+```text
+work/fetch_official_sentiment_data.py
+work/official_sentiment_data.json
+work/official_sentiment_events.json
+work/add_official_sentiment_module.js
+```
+
 ## 同步与部署
 
 每次修改后：
