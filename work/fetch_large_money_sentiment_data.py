@@ -12,12 +12,12 @@ CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "large_money_sentiment_data.json"
 START_YEAR = 2018
 END_YEAR = 2026
-END_DATE = "20260702"
+END_DATE = "20260714"
 
 
 def get_token():
     text = CONFIG.read_text(encoding="utf-8")
-    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^\"&\s]+)", text)
+    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^'\"&\s]+)", text)
     if not match:
         raise RuntimeError("Tushare token was not found.")
     return match.group(1)

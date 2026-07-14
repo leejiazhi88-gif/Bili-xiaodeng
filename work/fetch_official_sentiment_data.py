@@ -12,7 +12,7 @@ CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "official_sentiment_data.json"
 START_YEAR = 2010
 END_YEAR = 2026
-END_DATE = "20260710"
+END_DATE = "20260714"
 
 STAMP_DUTY_EVENTS = [
     ("20080501", 0.3),
@@ -23,7 +23,7 @@ STAMP_DUTY_EVENTS = [
 
 def get_token():
     text = CONFIG.read_text(encoding="utf-8")
-    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^\"&\s]+)", text)
+    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^'\"&\s]+)", text)
     if not match:
         raise RuntimeError("Tushare token was not found.")
     return match.group(1)

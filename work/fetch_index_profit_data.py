@@ -11,7 +11,7 @@ CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "index_profit_data.json"
 CACHE = ROOT / "work" / "income_cache.json"
 START_YEAR = 2010
-END_DATE = "20260709"
+END_DATE = "20260714"
 INDICES = {
     "sh": {"code": "399006.SZ", "name": "创业板指"},
     "sz": {"code": "000680.SH", "name": "科创综指"},
@@ -21,7 +21,7 @@ QUARTER_MONTH_DAYS = ("0331", "0630", "0930", "1231")
 
 def get_token():
     text = CONFIG.read_text(encoding="utf-8")
-    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^\"&\s]+)", text)
+    match = re.search(r"https://api\.tushare\.pro/mcp/\?token=([^'\"&\s]+)", text)
     if not match:
         raise RuntimeError("Tushare token was not found.")
     return match.group(1)
