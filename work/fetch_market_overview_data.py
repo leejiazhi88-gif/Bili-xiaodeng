@@ -1,5 +1,6 @@
 import json
 import re
+import ssl
 import urllib.request
 from pathlib import Path
 
@@ -8,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "market_overview_data.json"
 START_YEAR = 2006
-END_DATE = "20260714"
+END_DATE = "20260828"
 
 
 def get_token():
@@ -29,7 +30,8 @@ def call_api(token, api_name, params, fields):
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=90) as response:
+    context = ssl._create_unverified_context()
+    with urllib.request.urlopen(request, timeout=90, context=context) as response:
         result = json.loads(response.read().decode("utf-8"))
     if result.get("code") != 0:
         raise RuntimeError(f"{api_name}: {result.get('msg')}")

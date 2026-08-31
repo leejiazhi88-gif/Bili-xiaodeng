@@ -2,6 +2,7 @@ import bisect
 import json
 import re
 import time
+import ssl
 import urllib.request
 from pathlib import Path
 
@@ -11,7 +12,7 @@ CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "index_profit_data.json"
 CACHE = ROOT / "work" / "income_cache.json"
 START_YEAR = 2010
-END_DATE = "20260714"
+END_DATE = "20260828"
 INDICES = {
     "sh": {"code": "399006.SZ", "name": "创业板指"},
     "sz": {"code": "000680.SH", "name": "科创综指"},
@@ -37,7 +38,8 @@ def call_api(token, api_name, params, fields, timeout=90):
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    context = ssl._create_unverified_context()
+    with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
         result = json.loads(response.read().decode("utf-8"))
     if result.get("code") != 0:
         raise RuntimeError(f"{api_name}: {result.get('msg')}")

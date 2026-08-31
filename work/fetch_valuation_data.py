@@ -1,6 +1,7 @@
 import bisect
 import json
 import re
+import ssl
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -31,7 +32,8 @@ def call_api(token, api_name, params, fields):
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
+    context = ssl._create_unverified_context()
+    with urllib.request.urlopen(request, timeout=60, context=context) as response:
         result = json.loads(response.read().decode("utf-8"))
     if result.get("code") != 0:
         raise RuntimeError(f"{api_name}: {result.get('msg')}")

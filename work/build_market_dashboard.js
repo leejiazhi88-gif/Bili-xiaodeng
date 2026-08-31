@@ -5,7 +5,7 @@ const ROOT = path.resolve(__dirname, "..");
 const OUTPUT = path.join(ROOT, "outputs", "growth_indices_dashboard.html");
 const ROOT_INDEX = path.join(ROOT, "index.html");
 const START = "2010-06-01";
-const END = "2026-07-14";
+const END = "2026-08-28";
 
 function readMarketOverview() {
   return JSON.parse(fs.readFileSync(path.join(ROOT, "work", "market_overview_data.json"), "utf8"));
