@@ -12,7 +12,7 @@ CONFIG = Path.home() / ".codex" / "config.toml"
 OUTPUT = ROOT / "work" / "retail_sentiment_data.json"
 START_YEAR = 2016
 END_YEAR = 2026
-END_DATE = "20260924"
+END_DATE = "20260928"
 
 
 def get_token():
