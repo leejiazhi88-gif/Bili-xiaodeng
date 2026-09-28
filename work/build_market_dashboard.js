@@ -70,6 +70,25 @@ function stats(rows) {
   };
 }
 
+function combineScale(...groups) {
+  const byDate = new Map();
+  for (const rows of groups) {
+    for (const row of rows) {
+      const item = byDate.get(row.date) || { date: row.date, volumeYiShou: 0, amountYi: 0 };
+      if (Number.isFinite(Number(row.volumeYiShou))) item.volumeYiShou += Number(row.volumeYiShou);
+      if (Number.isFinite(Number(row.amountYi))) item.amountYi += Number(row.amountYi);
+      byDate.set(row.date, item);
+    }
+  }
+  return Array.from(byDate.values())
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((row) => ({
+      date: row.date,
+      volumeYiShou: Number(row.volumeYiShou.toFixed(4)),
+      amountYi: Number(row.amountYi.toFixed(4)),
+    }));
+}
+
 function htmlTemplate(data, echartsSource) {
   const dataJson = JSON.stringify(data);
   return `<!doctype html>
@@ -132,8 +151,8 @@ function htmlTemplate(data, echartsSource) {
     .legend { display: flex; gap: 17px; color: var(--muted); font-size: 12px; }
     .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
     #chart {
-      height: min(760px, calc(100vh - 255px));
-      min-height: 570px;
+      height: min(860px, calc(100vh - 230px));
+      min-height: 660px;
       background: rgba(9,20,34,.94);
       border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px;
     }
@@ -147,7 +166,7 @@ function htmlTemplate(data, echartsSource) {
       .cards { grid-template-columns: repeat(3, 1fr); }
       header { align-items: flex-start; flex-direction: column; }
       .asof { text-align: left; }
-      #chart { height: 680px; }
+      #chart { height: 760px; }
     }
     @media (max-width: 620px) {
       .wrap { padding: 20px 12px 26px; }
@@ -192,7 +211,7 @@ function htmlTemplate(data, echartsSource) {
 <script>${echartsSource}</script>
 <script>
 const DATA = ${dataJson};
-const COLORS = { sh: "#ff5d73", sz: "#36c2ff" };
+const COLORS = { sh: "#ff5d73", sz: "#36c2ff", volume: "#f6c85f", amount: "#7ddc82" };
 const fmt = (n, digits = 2) => Number.isFinite(Number(n)) ? Number(n).toLocaleString("zh-CN", { minimumFractionDigits: digits, maximumFractionDigits: digits }) : "--";
 const signed = (n) => Number.isFinite(Number(n)) ? (n >= 0 ? "+" : "") + fmt(n, 1) + "%" : "--";
 const cards = [
@@ -231,6 +250,14 @@ function series(name, rows, field, xAxisIndex, yAxisIndex, color, withMarks = fa
     } : undefined
   };
 }
+function scaleSeries(name, rows, field, xAxisIndex, yAxisIndex, color) {
+  return {
+    name, type: "line", xAxisIndex, yAxisIndex, data: points(rows, field),
+    showSymbol: false, sampling: "lttb", smooth: false,
+    lineStyle: { width: 1.7, color }, itemStyle: { color },
+    emphasis: { focus: "series", lineStyle: { width: 2.8 } }
+  };
+}
 const commonAxis = {
   type: "time", axisLine: { lineStyle: { color: "#344760" } },
   axisLabel: { color: "#7890aa", hideOverlap: true },
@@ -240,14 +267,16 @@ chart.setOption({
   animation: false,
   backgroundColor: "transparent",
   grid: [
-    { left: 72, right: 34, top: 42, height: "29%" },
-    { left: 72, right: 34, top: "38%", height: "24%" },
-    { left: 72, right: 34, top: "68%", height: "20%" }
+    { left: 72, right: 78, top: 42, height: "23%" },
+    { left: 72, right: 78, top: "31%", height: "19%" },
+    { left: 72, right: 78, top: "56%", height: "17%" },
+    { left: 72, right: 78, top: "79%", height: "12%" }
   ],
   title: [
     { text: "指数价格", left: 20, top: 12, textStyle: { color: "#edf4ff", fontSize: 13 } },
-    { text: "归母净利润TTM（亿元）", left: 20, top: "34%", textStyle: { color: "#edf4ff", fontSize: 13 } },
-    { text: "市盈率 PE(TTM)", left: 20, top: "64%", textStyle: { color: "#edf4ff", fontSize: 13 } }
+    { text: "归母净利润TTM（亿元）", left: 20, top: "28%", textStyle: { color: "#edf4ff", fontSize: 13 } },
+    { text: "市盈率 PE(TTM)", left: 20, top: "53%", textStyle: { color: "#edf4ff", fontSize: 13 } },
+    { text: "交易规模", left: 20, top: "76%", textStyle: { color: "#edf4ff", fontSize: 13 } }
   ],
   tooltip: {
     trigger: "axis", axisPointer: { type: "cross", link: [{ xAxisIndex: "all" }] },
@@ -258,20 +287,28 @@ chart.setOption({
       return "<b>" + date + "</b><br>" + lines.join("<br>");
     }
   },
+  legend: {
+    right: 22, top: "75%", textStyle: { color: "#8fa5bf", fontSize: 11 },
+    itemWidth: 14, itemHeight: 8,
+    data: ["交易量（亿手）", "交易额（亿元）"]
+  },
   axisPointer: { link: [{ xAxisIndex: "all" }], label: { backgroundColor: "#263b58" } },
   xAxis: [
     { ...commonAxis, gridIndex: 0, axisLabel: { show: false } },
     { ...commonAxis, gridIndex: 1, axisLabel: { show: false } },
-    { ...commonAxis, gridIndex: 2 }
+    { ...commonAxis, gridIndex: 2, axisLabel: { show: false } },
+    { ...commonAxis, gridIndex: 3 }
   ],
   yAxis: [
     { type: "value", gridIndex: 0, scale: true, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
     { type: "value", gridIndex: 1, scale: true, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
-    { type: "value", gridIndex: 2, scale: true, axisLabel: { color: "#7890aa", formatter: "{value}x" }, splitLine: { lineStyle: { color: "#17283d" } } }
+    { type: "value", gridIndex: 2, scale: true, axisLabel: { color: "#7890aa", formatter: "{value}x" }, splitLine: { lineStyle: { color: "#17283d" } } },
+    { type: "value", gridIndex: 3, scale: true, name: "亿手", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
+    { type: "value", gridIndex: 3, scale: true, name: "亿元", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { show: false }, opposite: true }
   ],
   dataZoom: [
-    { type: "inside", xAxisIndex: [0,1,2], filterMode: "none", start: 0, end: 100 },
-    { type: "slider", xAxisIndex: [0,1,2], bottom: 10, height: 24, borderColor: "#263b58",
+    { type: "inside", xAxisIndex: [0,1,2,3], filterMode: "none", start: 0, end: 100 },
+    { type: "slider", xAxisIndex: [0,1,2,3], bottom: 10, height: 24, borderColor: "#263b58",
       backgroundColor: "#0d1929", fillerColor: "rgba(246,200,95,.18)", handleStyle: { color: "#f6c85f" },
       textStyle: { color: "#8fa5bf" }, start: 0, end: 100 }
   ],
@@ -281,7 +318,9 @@ chart.setOption({
     series("创业板真实利润", DATA.sh, "profitYi", 1, 1, COLORS.sh),
     series("科创综指真实利润", DATA.sz, "profitYi", 1, 1, COLORS.sz),
     series("创业板PE(TTM)", DATA.sh, "pe", 2, 2, COLORS.sh),
-    series("科创综指PE(TTM)", DATA.sz, "pe", 2, 2, COLORS.sz)
+    series("科创综指PE(TTM)", DATA.sz, "pe", 2, 2, COLORS.sz),
+    scaleSeries("交易量（亿手）", DATA.scale, "volumeYiShou", 3, 3, COLORS.volume),
+    scaleSeries("交易额（亿元）", DATA.scale, "amountYi", 3, 4, COLORS.amount)
   ]
 });
 
@@ -342,7 +381,7 @@ async function main() {
   const sh = lastByWeek(attachProfit(overview.sh, profit.sh));
   const sz = lastByWeek(attachProfit(overview.sz, profit.sz));
   const echartsSource = fs.readFileSync(path.join(ROOT, "work", "echarts.min.js"), "utf8");
-  const data = { sh, sz, stats: { sh: stats(sh), sz: stats(sz) } };
+  const data = { sh, sz, scale: combineScale(sh, sz), stats: { sh: stats(sh), sz: stats(sz) } };
   fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
   fs.writeFileSync(OUTPUT, htmlTemplate(data, echartsSource), "utf8");
   require("./add_valuation_module");
@@ -358,6 +397,7 @@ async function main() {
     szPoints: sz.length,
     shLatest: data.stats.sh,
     szLatest: data.stats.sz,
+    scaleLatest: data.scale[data.scale.length - 1],
   }, null, 2));
 }
 

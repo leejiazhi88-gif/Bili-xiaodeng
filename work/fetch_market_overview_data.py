@@ -61,7 +61,7 @@ def fetch_by_year(token, api_name, ts_code, fields):
 
 
 def build_market(token, ts_code):
-    prices = fetch_by_year(token, "index_daily", ts_code, "trade_date,close")
+    prices = fetch_by_year(token, "index_daily", ts_code, "trade_date,close,vol,amount")
     basics = fetch_by_year(token, "index_dailybasic", ts_code, "trade_date,pe_ttm")
     pe_by_date = {
         row["trade_date"]: float(row["pe_ttm"])
@@ -76,12 +76,16 @@ def build_market(token, ts_code):
         if pe:
             last_pe = pe
         close = float(row["close"])
+        volume = float(row.get("vol") or 0)
+        amount = float(row.get("amount") or 0)
         series.append(
             {
                 "date": f"{date[:4]}-{date[4:6]}-{date[6:]}",
                 "close": close,
                 "pe": pe,
                 "earnings": close / pe if pe else None,
+                "volumeYiShou": round(volume / 100000000, 4),
+                "amountYi": round(amount / 100000, 4),
             }
         )
     return series
