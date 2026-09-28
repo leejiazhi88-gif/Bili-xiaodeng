@@ -262,9 +262,9 @@ function chartOption(title, rows, color) {
     title: [
       { text: title, left: 20, top: 12, textStyle: { color, fontSize: 16, fontWeight: 750 } },
       { text: "指数价格", left: 20, top: 36, textStyle: { color: "#edf4ff", fontSize: 12 } },
-      { text: "归母净利润TTM（亿元）", left: 20, top: "30%", textStyle: { color: "#edf4ff", fontSize: 12 } },
+      { text: "交易规模", left: 20, top: "30%", textStyle: { color: "#edf4ff", fontSize: 12 } },
       { text: "市盈率 PE(TTM)", left: 20, top: "54%", textStyle: { color: "#edf4ff", fontSize: 12 } },
-      { text: "交易规模", left: 20, top: "77%", textStyle: { color: "#edf4ff", fontSize: 12 } }
+      { text: "归母净利润TTM（亿元）", left: 20, top: "77%", textStyle: { color: "#edf4ff", fontSize: 12 } }
     ],
     tooltip: {
       trigger: "axis", axisPointer: { type: "cross", link: [{ xAxisIndex: "all" }] },
@@ -276,7 +276,7 @@ function chartOption(title, rows, color) {
       }
     },
     legend: {
-      right: 22, top: "76%", textStyle: { color: "#8fa5bf", fontSize: 11 },
+      right: 22, top: "29%", textStyle: { color: "#8fa5bf", fontSize: 11 },
       itemWidth: 14, itemHeight: 8,
       data: ["交易量（亿手）", "交易额（亿元）"]
     },
@@ -289,10 +289,10 @@ function chartOption(title, rows, color) {
     ],
     yAxis: [
       { type: "value", gridIndex: 0, scale: true, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
-      { type: "value", gridIndex: 1, scale: true, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
+      { type: "value", gridIndex: 1, scale: true, name: "亿手", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
+      { type: "value", gridIndex: 1, scale: true, name: "亿元", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { show: false }, opposite: true },
       { type: "value", gridIndex: 2, scale: true, axisLabel: { color: "#7890aa", formatter: "{value}x" }, splitLine: { lineStyle: { color: "#17283d" } } },
-      { type: "value", gridIndex: 3, scale: true, name: "亿手", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } },
-      { type: "value", gridIndex: 3, scale: true, name: "亿元", nameTextStyle: { color: "#7890aa" }, axisLabel: { color: "#7890aa" }, splitLine: { show: false }, opposite: true }
+      { type: "value", gridIndex: 3, scale: true, axisLabel: { color: "#7890aa" }, splitLine: { lineStyle: { color: "#17283d" } } }
     ],
     dataZoom: [
       { type: "inside", xAxisIndex: [0,1,2,3], filterMode: "none", start: 0, end: 100 },
@@ -302,10 +302,10 @@ function chartOption(title, rows, color) {
     ],
     series: [
       series(title + "价格", rows, "close", 0, 0, color, true),
-      series(title + "真实利润", rows, "profitYi", 1, 1, color),
-      series(title + "PE(TTM)", rows, "pe", 2, 2, color),
-      scaleSeries("交易量（亿手）", rows, "volumeYiShou", 3, 3, COLORS.volume),
-      scaleSeries("交易额（亿元）", rows, "amountYi", 3, 4, COLORS.amount)
+      scaleSeries("交易量（亿手）", rows, "volumeYiShou", 1, 1, COLORS.volume),
+      scaleSeries("交易额（亿元）", rows, "amountYi", 1, 2, COLORS.amount),
+      series(title + "PE(TTM)", rows, "pe", 2, 3, color),
+      series(title + "真实利润", rows, "profitYi", 3, 4, color)
     ]
   };
 }
