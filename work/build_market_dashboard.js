@@ -173,7 +173,7 @@ function htmlTemplate(data, echartsSource) {
   <section class="cards" id="cards"></section>
   <section>
     <div class="toolbar">
-      <div class="ranges">
+      <div class="ranges" aria-label="创业板指与科创综指共同时间范围">
         <button data-years="1">1年</button>
         <button data-years="3">3年</button>
         <button data-years="5">5年</button>
@@ -317,15 +317,33 @@ const charts = [
 charts[0].setOption(chartOption("创业板指", DATA.sh, COLORS.sh));
 charts[1].setOption(chartOption("科创综指", DATA.sz, COLORS.sz));
 
-document.querySelectorAll(".ranges [data-years]").forEach(btn => btn.addEventListener("click", () => {
-  document.querySelectorAll(".ranges [data-years]").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  const years = Number(btn.dataset.years);
+function applySharedRange(years) {
   const end = new Date("${END}T00:00:00Z");
   const start = new Date(end);
   start.setUTCFullYear(start.getUTCFullYear() - years);
-  charts.forEach(chart => chart.dispatchAction({ type: "dataZoom", startValue: start.toISOString().slice(0,10), endValue: "${END}" }));
+  const startValue = start.toISOString().slice(0, 10);
+  const endValue = "${END}";
+  charts.forEach(chart => {
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomIndex: 0,
+      startValue,
+      endValue
+    });
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomIndex: 1,
+      startValue,
+      endValue
+    });
+  });
+}
+
+document.querySelectorAll(".ranges [data-years]").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".ranges [data-years]").forEach(b => b.classList.toggle("active", b === btn));
+  applySharedRange(Number(btn.dataset.years));
 }));
+applySharedRange(20);
 window.addEventListener("resize", () => charts.forEach(chart => chart.resize()));
 </script>
 </body>
